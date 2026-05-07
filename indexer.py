@@ -1,36 +1,47 @@
-import json
 import re
+import math
 from collections import defaultdict
+from database import init_db, save_pages, save_index
+from crawler import load_data
 
 def build_index(page_content):
-    inverted_index = defaultdict(list)  # word -> list of urls
-    
+    inverted_index = defaultdict(list)
+    tf_scores = {}
+    total_docs = len(page_content)
+
     for url, content in page_content.items():
-        # Clean and tokenize text
         words = re.findall(r'\b[a-z]{3,}\b', content.lower())
-        # Remove duplicates for this page
-        unique_words = set(words)
-        
-        for word in unique_words:
+        total_words = len(words)
+        word_count = defaultdict(int)
+
+        for word in words:
+            word_count[word] += 1
+
+        tf_scores[url] = {
+            word: count / total_words 
+            for word, count in word_count.items()
+        }
+
+        for word in set(words):
             inverted_index[word].append(url)
-    
-    return dict(inverted_index)
 
-def save_index(index, filename='index.json'):
-    with open(filename, 'w') as f:
-        json.dump(index, f)
-    print(f"Index built with {len(index)} unique words")
+    idf_scores = {}
+    for word, urls in inverted_index.items():
+        idf_scores[word] = math.log(total_docs / len(urls))
 
-def load_index(filename='index.json'):
-    with open(filename, 'r') as f:
-        return json.load(f)
+    return dict(inverted_index), tf_scores, idf_scores
 
 if __name__ == "__main__":
-    from crawler import load_data
-    
+    init_db()
     print("Loading crawled data...")
-    link_graph, page_content = load_data()
+    _, page_content = load_data()
+    
+    print("Saving pages to database...")
+    save_pages(page_content)
     
     print("Building index...")
-    index = build_index(page_content)
-    save_index(index)
+    index, tf_scores, idf_scores = build_index(page_content)
+    
+    print("Saving index to database...")
+    save_index(index, tf_scores, idf_scores)
+    print(f"Done - {len(index)} unique words indexed")

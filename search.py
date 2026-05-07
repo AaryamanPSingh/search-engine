@@ -1,6 +1,5 @@
 import json
-from indexer import load_index
-from pagerank import load_pagerank
+from database import load_index, load_pagerank, load_page_content
 
 def search(query, index, tf_scores, idf_scores, ranks, top_k=10):
     words = query.lower().split()
@@ -38,15 +37,18 @@ def search(query, index, tf_scores, idf_scores, ranks, top_k=10):
 
 def get_snippet(url, query, page_content, snippet_length=200):
     content = page_content.get(url, '')
+    if not content:
+        return "No preview available."
+    
     query_words = query.lower().split()
     
-    # Clean content - remove short lines (navigation, menus)
     lines = content.split('\n')
     clean_lines = [line.strip() for line in lines if len(line.strip()) > 100]
     clean_content = ' '.join(clean_lines)
-    
-    # Clean up whitespace
     clean_content = ' '.join(clean_content.split())
+    
+    if not clean_content:
+        return "No preview available."
     
     content_lower = clean_content.lower()
     best_pos = len(clean_content)
@@ -69,7 +71,7 @@ if __name__ == "__main__":
     print("Loading data...")
     index, tf_scores, idf_scores = load_index()
     ranks = load_pagerank()
-
+    page_content = load_page_content()
     while True:
         query = input("\nSearch: ")
         if query == 'quit':

@@ -39,7 +39,14 @@ def crawl(seed_url, max_pages=500):
                 'Portal:' not in full_url and
                 'Special:' not in full_url and
                 'Talk:' not in full_url and
-                'File:' not in full_url):
+                'File:' not in full_url and
+                'Category:' not in full_url and
+                'identifier)' not in full_url and
+                'Template:' not in full_url and
+                'Wayback' not in full_url and
+                'Main_Page' not in full_url and
+                'Wikisource' not in full_url and
+                '#' not in full_url):
                     links.append(full_url)
                     if full_url not in visited:
                         queue.append(full_url)
@@ -73,6 +80,6 @@ def load_data(graph_file='link_graph.json', content_file='page_content.json'):
 
 if __name__ == "__main__":
     seed = "https://en.wikipedia.org/wiki/Mathematics"
-    link_graph, page_content = crawl(seed, max_pages=500)
+    link_graph, page_content = crawl(seed, max_pages=3000)
     print(f"Total pages crawled: {len(page_content)}")
     save_data(link_graph, page_content)

@@ -1,15 +1,13 @@
 from flask import Flask, request, render_template_string
 from search import search, get_snippet
-from indexer import load_index
-from pagerank import load_pagerank
-from crawler import load_data
+from database import load_index, load_pagerank, load_page_content
 
 app = Flask(__name__)
 
 print("Loading data...")
 index, tf_scores, idf_scores = load_index()
 ranks = load_pagerank()
-_, page_content = load_data()
+page_content = load_page_content()
 
 HTML = '''
 <!DOCTYPE html>
